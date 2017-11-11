@@ -16,6 +16,41 @@ void *connection_handler(void *);
  
 int main(int argc , char *argv[])
 {
+    if (argc != 5) {
+        fprintf(stderr,"Uso: %s -l <puerto_srv_c> -b <archivo_bitácora>\n", argv[0]);
+        exit(1);
+    }
+
+
+    char *flag_port;
+    char *flag_log_file;
+
+    flag_port = strdup("-l");
+    flag_log_file = strdup("-b");
+
+    int n, k;
+    long port;
+    char *log_file_name;
+
+    n = 1;
+    k = 2;
+
+    int i;
+
+    for(i = 0 ; i < 2 ; i++){
+        if (strcmp(argv[n],flag_port) == 0){
+          port = strtol(argv[k],0,10);
+        } else if (strcmp(argv[n],flag_log_file) == 0){
+          log_file_name = strdup(argv[k]);
+        } else {
+          printf("ERROR: Argumento %s no reconocido.\n", argv[n]);
+          exit(1);
+        }
+        n = n + 2;
+        k = k + 2;
+    }
+
+
     int socket_desc , client_sock , c , *new_sock;
     struct sockaddr_in server , client;
      
@@ -60,11 +95,11 @@ int main(int argc , char *argv[])
         new_sock = malloc(1);
         *new_sock = client_sock;
          
-        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
+        /**if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
         {
             perror("could not create thread");
             return 1;
-        }
+        }*/
          
         //Now join the thread , so that we dont terminate before the thread
         //pthread_join( sniffer_thread , NULL);
