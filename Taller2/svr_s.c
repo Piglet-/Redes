@@ -9,6 +9,7 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>    //write
 #include<pthread.h> //for threading , link with lpthread
+#include <string.h>
  
 //the thread function
 void *connection_handler(void *);
@@ -29,7 +30,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8880 );
+    server.sin_port = htons( 8882 );
      
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -88,6 +89,7 @@ void *connection_handler(void *socket_desc)
     int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000];
+    char * pch;
      
     //Send some messages to the client
     message = "Greetings! I am your connection handler \n";
@@ -103,6 +105,13 @@ void *connection_handler(void *socket_desc)
         //Send the message back to client
         client_message[read_size] = '\0';
         write(sock , client_message , strlen(client_message));
+
+        pch = strtok (client_message," :");
+        while (pch != NULL)
+        {
+            printf ("%s\n",pch);
+            pch = strtok (NULL, " :");
+        }
     }
      
     if(read_size == 0)
