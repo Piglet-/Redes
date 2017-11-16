@@ -7,6 +7,7 @@
 #include<arpa/inet.h> //inet_addr
 #include<unistd.h>
 #include<stdlib.h>
+#include <time.h>
  
 int main(int argc , char *argv[])
 {
@@ -76,10 +77,25 @@ int main(int argc , char *argv[])
     {
         printf("Enter message : ");
         scanf ("%[^\n]%*c", message);
-        printf("You entered %s\n", message);
+        
+
+        time_t rawtime;
+        struct tm * timeinfo;
+        
+
+        char output[2000];
+        
+
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+        
+
+        sprintf(output,"[%d:%d:%d %d-%d-%d] %s",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900, message);
+        
+        printf("Sending message %s\n", output);
         
         //Send some data
-        if( send(sock , message , strlen(message) , 0) < 0)
+        if( send(sock , output , strlen(output) , 0) < 0)
         {
             puts("Send failed");
             return 1;
