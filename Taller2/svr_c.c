@@ -75,7 +75,9 @@ int main(int argc , char *argv[])
     while(1)
     {
         printf("Enter message : ");
-        scanf("%s" , message); 
+        scanf ("%[^\n]%*c", message);
+        printf("You entered %s\n", message);
+        
         //Send some data
         if( send(sock , message , strlen(message) , 0) < 0)
         {

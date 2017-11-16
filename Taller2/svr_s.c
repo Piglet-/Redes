@@ -174,15 +174,20 @@ void *connection_handler(void *socket_desc)
             fwrite(", " , 1 , sizeof(char) * 2 , fp );
             pch = strtok (NULL, " :");
 
+
+
         }
 
         while (pch != NULL)
         {
             fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(" " , 1 , sizeof(char) , fp );
             pch = strtok (NULL, " :");
+            if (pch != NULL) fwrite(" " , 1 , sizeof(char) , fp );
 
         }
+        fwrite(")" , 1 , sizeof(char) , fp );
+        fwrite("\n" , 1 , sizeof(char) , fp );
+
 
     fclose(fp);
     }
