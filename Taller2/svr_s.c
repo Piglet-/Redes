@@ -14,6 +14,7 @@
 char *file;
 //the thread function
 void *connection_handler(void *);
+int patternFinder(char *m);
 
 struct ParamsThread
 {
@@ -184,6 +185,19 @@ void *connection_handler(void *socket_desc)
 
         }
         fwrite(")" , 1 , sizeof(char) , fp );*/
+
+        char *m = strtok(client_message,"]");
+        m =  client_message + strlen(m) + 2;
+
+        if(patternFinder(m) > 0){
+            /* manejar que hacer cuando se encuentra un patroncito */
+            printf("Pattern recognized: %s\n", m);
+        } else {
+            /* No es un patron asi que no se hace nada. Solo se escribe en la bitacora */
+            printf("Not a pattern.\n");
+        }
+
+
         pch = strtok (client_message,"\n");
         if (pch != NULL)
         {
@@ -212,4 +226,35 @@ void *connection_handler(void *socket_desc)
     free(params->sock);
      
     return 0;
+}
+
+
+int patternFinder(char *m){
+    if (strcmp(m, "Communication Offline") == 0){
+        return 1;
+    } else if (strcmp(m, "Communication error") == 0){
+        return 1;
+    } else if (strcmp(m, "Low Cash alert") == 0){
+        return 1;
+    } else if (strcmp(m, "Running Out of notes in cassette") == 0){
+        return 1;
+    } else if (strcmp(m, "empty") == 0){
+        return 1;
+    } else if (strcmp(m, "Service mode entered") == 0){
+        return 1;
+    } else if (strcmp(m, "Service mode left") == 0){
+        return 1;
+    } else if (strcmp(m, "device did not answer as expected") == 0){
+        return 1;
+    } else if (strcmp(m, "The protocol was cancelled") == 0){
+        return 1;
+    } else if (strcmp(m, "Low Paper warning") == 0){
+        return 1;
+    } else if (strcmp(m, "Printer Error") == 0){
+        return 1;
+    } else if (strcmp(m, "Paper-out condition") == 0){
+        return 1;
+    } else {
+        return -1;
+    }
 }
