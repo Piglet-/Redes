@@ -162,7 +162,11 @@ void *connection_handler(void *socket_desc)
         
         fp = fopen( file , "a" );
 
-        pch = strtok (client_message," :");
+        printf("Current thread id %lu\n",pthread_self());
+
+        char res[500];
+
+        /*pch = strtok (client_message," :");
         while (pch != NULL)
         {
             fwrite("(" , 1 , sizeof(char) , fp );
@@ -179,7 +183,15 @@ void *connection_handler(void *socket_desc)
             if (pch != NULL) fwrite(" " , 1 , sizeof(char) , fp );
 
         }
-        fwrite(")" , 1 , sizeof(char) , fp );
+        fwrite(")" , 1 , sizeof(char) , fp );*/
+        pch = strtok (client_message,"\n");
+        if (pch != NULL)
+        {
+            sprintf(res,"%lu %s",pthread_self(),pch);
+        }
+
+        
+        fwrite(res , sizeof(char) , strlen(res) , fp );
         fwrite("\n" , 1 , sizeof(char) , fp );
 
 
