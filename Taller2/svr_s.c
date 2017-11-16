@@ -14,6 +14,13 @@
 char *file;
 //the thread function
 void *connection_handler(void *);
+
+struct ParamsThread
+{
+    char *ip;
+    char *port;
+    int *sock;
+};
  
 int main(int argc , char *argv[])
 {
@@ -93,8 +100,12 @@ int main(int argc , char *argv[])
         pthread_t sniffer_thread;
         new_sock = malloc(1);
         *new_sock = client_sock;
+        struct ParamsThread params;
+        params.ip = "127.0.0.1";
+        params.port = "8888";
+        params.sock = new_sock;
          
-        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , (void*) new_sock) < 0)
+        if( pthread_create( &sniffer_thread , NULL ,  connection_handler , &params) < 0)
         {
             perror("could not create thread");
             return 1;
@@ -120,12 +131,17 @@ int main(int argc , char *argv[])
 void *connection_handler(void *socket_desc)
 {
     //Get the socket descriptor
-    int sock = *(int*)socket_desc;
+    struct ParamsThread *params = socket_desc;
+    int socke = *(int*)params->sock;
     int read_size;
     char *message , client_message[2000];
     char * pch;
     char * str;
     FILE *fp; 
+    int num = strtol(params->port,NULL,10);
+    printf("%i\n", socke);
+    printf("%s\n", params->ip);
+    printf("%i\n", num);
 
     
 
@@ -138,44 +154,22 @@ void *connection_handler(void *socket_desc)
 
      
     //Receive a message from client
-    while( (read_size = recv(sock , client_message , 2000 - 1 , 0)) > 0 )
+    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) > 0 )
     {
         //Send the message back to client
         client_message[read_size] = '\0';
-        write(sock , client_message , strlen(client_message));
+        write(socke , client_message , strlen(client_message));
         
         fp = fopen( file , "a" );
 
         pch = strtok (client_message," :");
-        if (pch != NULL)
+        while (pch != NULL)
         {
             fwrite("(" , 1 , sizeof(char) , fp );
             fwrite(pch , 1 , strlen(pch) , fp );
             fwrite(", " , 1 , sizeof(char) * 2 , fp );
             pch = strtok (NULL, " :");
             
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(":" , 1 , sizeof(char) , fp );
-            pch = strtok (NULL, " :");
-            
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(", " , 1 , sizeof(char) * 2 , fp );
-            pch = strtok (NULL, " :");
-
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(":" , 1 , sizeof(char) , fp );
-            pch = strtok (NULL, " :");
-
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(", " , 1 , sizeof(char) * 2 , fp );
-            pch = strtok (NULL, " :");
-
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(", " , 1 , sizeof(char) * 2 , fp );
-            pch = strtok (NULL, " :");
-
-
-
         }
 
         while (pch != NULL)
@@ -203,7 +197,7 @@ void *connection_handler(void *socket_desc)
     }
          
     //Free the socket pointer
-    free(socket_desc);
+    free(params->sock);
      
     return 0;
 }
