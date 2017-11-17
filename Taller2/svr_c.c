@@ -76,6 +76,7 @@ int main(int argc , char *argv[])
     if (i > 0) {
 
         //Bind
+        server.sin_port = htons( localport );
         int client_sock , c , *new_sock;
         struct sockaddr_in client;
 
