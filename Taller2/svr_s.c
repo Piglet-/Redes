@@ -111,7 +111,7 @@ int main(int argc , char *argv[])
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
-
+        time_t currenttime = time(0);
         pthread_t sniffer_thread;                   /** thread */
         new_sock = malloc(1);                       /** socket */
         *new_sock = client_sock;                    /** listen */
@@ -177,13 +177,13 @@ void *connection_handler(void *socket_desc)
         printf("puerto del cliente: %d\n",client_port );
     }
     
-    /** init current time of connection */
-    time_t currenttime = time(0);
-
+    time_t currenttime = clock();
+    time_t newtime;
     /** read messages from the client and reply */
-    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) > 0)  // >= 0
+    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0)  // >= 0
     {
-
+        /** init current time of connection */
+        
         /*if (read_size == 0){
             close(socke);
             socke = socket(AF_INET , SOCK_STREAM , 0);
@@ -216,6 +216,21 @@ void *connection_handler(void *socket_desc)
             
             
         }*/
+
+        if(read_size == 0){
+
+            newtime = clock();
+            time_t difference = newtime - currenttime;
+            int msec = 0;
+            msec = difference * 1000 / CLOCKS_PER_SEC;
+            if (msec > 30000){
+                printf("send alert\n");
+                break;
+            }
+            continue;
+        } 
+
+        currenttime = clock();
 
         /** send message back to client */
         client_message[read_size] = '\0';
@@ -275,7 +290,11 @@ void *connection_handler(void *socket_desc)
 
         /** close the binnacle file */
         fclose(fp);
+
+        
     }
+
+    
      
     /*if(read_size == 0)
     {
