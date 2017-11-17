@@ -260,14 +260,15 @@ void *connection_handler(void *socket_desc)
         fwrite(")" , 1 , sizeof(char) , fp );*/
 
         /** save the message from client */
-        char *m = strtok(client_message,"]");
-        m =  client_message + strlen(m) + 2;
+        char *m1 = strtok(client_message," ");
+        char *m2 = strtok(NULL,"\n");
+        int pattern;
 
         /** check patterns in message */
-        if(patternFinder(m) > 0){
+        if((pattern = patternFinder(m2)) > 0){
             /* manejar que hacer cuando se encuentra un patroncito */
             /** handler for recognized pattern  */
-            printf("Pattern recognized: %s\n", m);
+            printf("Pattern recognized: %s\n", m2);
         } else {
             /* No es un patron asi que no se hace nada. Solo se escribe en la bitacora */
             /** no patters found. */
@@ -278,7 +279,7 @@ void *connection_handler(void *socket_desc)
         pch = strtok (client_message,"\n");
         if (pch != NULL)
         {
-            sprintf(res,"%lu %s",pthread_self(),pch);
+            sprintf(res,"(%lu,%s,%s,%d,%s)",pthread_self(),m1,params->ip,pattern,m2);
         }
 
         /** writing on binnacle file */
