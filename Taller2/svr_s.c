@@ -320,31 +320,62 @@ void *connection_handler(void *socket_desc)
 *   @params m message from client
 */
 int patternFinder(char *m){
+    int code = -1;
     if (strcmp(m, "Communication Offline") == 0){
-        return 1;
+        code = 1;
     } else if (strcmp(m, "Communication error") == 0){
-        return 1;
+        code = 2;
     } else if (strcmp(m, "Low Cash alert") == 0){
-        return 1;
+        code = 3;
     } else if (strcmp(m, "Running Out of notes in cassette") == 0){
-        return 1;
+        code = 4;
     } else if (strcmp(m, "empty") == 0){
-        return 1;
+        code = 5;
     } else if (strcmp(m, "Service mode entered") == 0){
-        return 1;
+        code = 6;
     } else if (strcmp(m, "Service mode left") == 0){
-        return 1;
+        code = 7;
     } else if (strcmp(m, "device did not answer as expected") == 0){
-        return 1;
+        code = 8;
     } else if (strcmp(m, "The protocol was cancelled") == 0){
-        return 1;
+        code = 9;
     } else if (strcmp(m, "Low Paper warning") == 0){
-        return 1;
+        code = 10;
     } else if (strcmp(m, "Printer Error") == 0){
-        return 1;
+        code = 11;
     } else if (strcmp(m, "Paper-out condition") == 0){
-        return 1;
+        code = 12;
     } else {
-        return -1;
+        code = -1;
     }
+
+    if (code > 0) {
+        send_mail(m);
+    }
+    return code;
 }
+
+/** 
+*   Send alarm message vie email
+*   @params m message from client wich contains a pattern
+*/
+
+int send_mail(char *m){
+
+    char cmd[100];                      /** variable for command line */
+    char to[] = "supervisor@atm.com";   /** email id of the recepient */
+    char tempFile[100] = "temp";                 /** name of temp file */
+
+    FILE *fp = fopen(tempFile,"w");     /** open it for writing */
+    fprintf(fp,"%s\n", m);              /** write body to it */
+    fclose(fp);                         /** close it */
+
+    printf("send mail");
+    /** prepare command line */
+    sprintf(cmd,"mail -s ALERT  %s < %s",to,tempFile);
+    /** execute it */
+    system(cmd);    
+
+    return 0;
+}
+
