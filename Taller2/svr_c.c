@@ -86,6 +86,7 @@ int main(int argc , char *argv[])
     server.sin_family = AF_INET;
     server.sin_port = htons( serverport );
 
+    /** THIS COMMENTED CODE WAS AN INTENT OF ACCEPTING CONNECTIONS FRON THE SERVER */
     /*if (i > 0) {
 
         //Bind
@@ -154,12 +155,12 @@ int main(int argc , char *argv[])
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
         
-        /** building the connection info */  
+        /** building the connection */  
         sprintf(output,"[%d:%d:%d %d-%d-%d] %s",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900, message);
         
         printf("Sending message %s\n", output);
         
-        /** send some data to server*/  
+        /** send some data */  
         if( send(sock , output , strlen(output) , 0) < 0)
         {
             puts("Send failed");

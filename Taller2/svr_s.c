@@ -111,7 +111,6 @@ int main(int argc , char *argv[])
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
-        time_t currenttime = time(0);
         pthread_t sniffer_thread;                   /** thread */
         new_sock = malloc(1);                       /** socket */
         *new_sock = client_sock;                    /** listen */
@@ -159,10 +158,8 @@ void *connection_handler(void *socket_desc)
     int read_size;
     char *message , client_message[2000];
     char * pch;
-    char * str;
     FILE *fp; 
     int client_port;
-    struct sockaddr_in client;
     int num = strtol(params->port,NULL,10);
 
     /** print socket information */
@@ -182,7 +179,7 @@ void *connection_handler(void *socket_desc)
     /** read messages from the client and reply */
     while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0)  // >= 0
     {
-        /** init current time of connection */
+        /** THIS COMMENTED CODE WAS AN INTENT OF STABLISH A CONNECTION WITH THE CLIENT */
         
         /*if (read_size == 0){
             close(socke);
