@@ -201,12 +201,10 @@ void *connection_handler(void *socket_desc)
             continue;
             
             
-        } else {
-            //current time
-            currenttime = time(0);
         }
         //Send the message back to client
         client_message[read_size] = '\0';
+        printf("%s\n", client_message );
         write(socke , client_message , strlen(client_message));
         
         fp = fopen( file , "a" );
