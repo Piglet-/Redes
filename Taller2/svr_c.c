@@ -156,7 +156,7 @@ int main(int argc , char *argv[])
         timeinfo = localtime ( &rawtime );
         
         /** building the connection */  
-        sprintf(output,"[%d:%d:%d %d-%d-%d] %s",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900, message);
+        sprintf(output,"%d:%d:%d,%d-%d-%d %s",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900, message);
         
         printf("Sending message %s\n", output);
         
