@@ -1,51 +1,66 @@
-/*
-    C socket server example, handles multiple clients using threads
+/**  
+* svr_s.c - C socket server what handles multiple clients using threads  
+* @authors  
+*   Carlos Ferreira     11-10
+*   Carlos Martínez     11-10
+*   Dayana Rodrigues    10-10615
 */
- 
+
 #include<stdio.h>
-#include<string.h>    //strlen
-#include<stdlib.h>    //strlen
+#include<string.h>      /** strlen */
+#include<stdlib.h>      /** strlen */
 #include<sys/socket.h>
-#include<arpa/inet.h> //inet_addr
-#include<unistd.h>    //write
-#include<pthread.h> //for threading , link with lpthread
+#include<arpa/inet.h>   /** inet_addr */
+#include<unistd.h>      /** write */
+#include<pthread.h>     /** for threading, link with lpthread */
 #include <string.h>
 
-char *file;
-//the thread function
-void *connection_handler(void *);
-int patternFinder(char *m);
-char *client_ip;
+char *file; /** binnacle of the server */
+
+void *connection_handler(void *);   /** The thread function. */
+int patternFinder(char *m);         /** Function to find patterns */
+char *client_ip;                    /** IP of the connected client */
+
+/**  
+    * Struct for params of each thread. 
+*/
 
 struct ParamsThread
 {
-    char *ip;
-    char *port;
-    int *sock;
+    char *ip;       /** Struct value for the IP address */
+    char *port;     /** Struct value for the port */
+    int *sock;      /** Struct value for the thread ID */
 };
- 
+
+/**  
+    * Main function with the logic of the server. 
+    * @return the code of exit.  
+*/
+
 int main(int argc , char *argv[])
 {
+    /** verifying the command line */
     if (argc != 5) {
         fprintf(stderr,"Uso: %s -l <puerto_srv_c> -b <archivo_bitácora>\n", argv[0]);
         exit(1);
     }
 
-    char *flag_port;
-    char *flag_log_file;
-    file = argv[4];
-    flag_port = strdup("-l");
-    flag_log_file = strdup("-b");
+    char *flag_port;                /** flag port */
+    char *flag_log_file;            /** flag for binnacle file */
+    file = argv[4];                 /** name of binnacle file */
+    flag_port = strdup("-l");       
+    flag_log_file = strdup("-b");   
 
-    int n, k;
-    long port;
-    char *log_file_name;
+    int n, k;               /** aux variables for reading command line params */
+    long port;              /** port */
+    char *log_file_name;    /** name of log file */
 
     n = 1;
     k = 2;
 
     int i;
 
+    /** readinng the params from comand line */
     for(i = 0 ; i < 2 ; i++){
         if (strcmp(argv[n],flag_port) == 0){
           port = strtol(argv[k],0,10);
@@ -59,65 +74,66 @@ int main(int argc , char *argv[])
         k = k + 2;
     }
 
-    int socket_desc , client_sock , c , *new_sock;
-    struct sockaddr_in server , client;
+    int socket_desc , client_sock , c , *new_sock;  /** sockets variables */
+    struct sockaddr_in server , client;             /** struct for client and server info */
      
-    //Create socket
-    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+    
+    socket_desc = socket(AF_INET , SOCK_STREAM , 0); /** create socket */
     if (socket_desc == -1)
     {
         printf("Could not create socket");
     }
     puts("Socket created");
      
-    //Prepare the sockaddr_in structure
+    /** prepare the sockaddr_in structure */ 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons( 8881 );
      
-    //Bind
+    
+    /** binding */ 
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0) 
     {
-        //print the error message
+        
         perror("bind failed. Error");
         return 1;
     }
     puts("bind done");
      
-    //Listen
+    /** listen */
     listen(socket_desc , 3);
      
-    //Accept and incoming connection
+     /** accept and incoming connection */
     puts("Waiting for incoming connections...");
     c = sizeof(struct sockaddr_in);
-     
-     
-    //Accept and incoming connection
-    puts("Waiting for incoming connections...");
-    c = sizeof(struct sockaddr_in);
+    
+    /** While connection is accepted create a thread and assign the socket for beging connection */
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
-        pthread_t sniffer_thread;
-        new_sock = malloc(1);
-        *new_sock = client_sock;
-        struct ParamsThread params;
-        params.ip = inet_ntoa(client.sin_addr);
-        params.port = "8888";
-        params.sock = new_sock;
+
+        pthread_t sniffer_thread;                   /** thread */
+        new_sock = malloc(1);                       /** socket */
+        *new_sock = client_sock;                    /** listen */
+        struct ParamsThread params;                 /** struct of thread params */
+        params.ip = inet_ntoa(client.sin_addr);     /** IP address */
+        params.port = "8888";                       /** port */
+        params.sock = new_sock;                     /** socket ID */
          
-        client_ip = inet_ntoa(client.sin_addr);
+        /** saving IP address */
+        client_ip = inet_ntoa(client.sin_addr); 
+
+        /** creating thread */
         if( pthread_create( &sniffer_thread , NULL ,  connection_handler , &params) < 0)
         {
             perror("could not create thread");
             return 1;
         }
          
-        //Now join the thread , so that we dont terminate before the thread
-        //pthread_join( sniffer_thread , NULL);
         puts("Handler assigned");
     }
-     
+    
+    /** accept failed */
     if (client_sock < 0)
     {
         perror("accept failed");
@@ -127,14 +143,19 @@ int main(int argc , char *argv[])
     return 0;
 }
  
-/*
- * This will handle connection for each client
- * */
+/**
+ *  This will handle connection for each client.
+ *  @params socket_desc: socket descriptor.
+ */
+
 void *connection_handler(void *socket_desc)
 {
-    //Get the socket descriptor
+    
+    /** get the socket descriptor */
     struct ParamsThread *params = socket_desc;
     int socke = *(int*)params->sock;
+
+    /** variables for messages transmition */
     int read_size;
     char *message , client_message[2000];
     char * pch;
@@ -143,47 +164,40 @@ void *connection_handler(void *socket_desc)
     int client_port;
     struct sockaddr_in client;
     int num = strtol(params->port,NULL,10);
+
+    /** print socket information */
     printf("%i\n", socke);
     printf("%s\n", params->ip);
     printf("%i\n", num);
 
-    
-
-    //Send some messages to the client
-    message = "Greetings! I am your connection handler \n";
-    //write(sock , message , strlen(message));
-     
-    message = "Now type something and i shall repeat what you type \n";
-    //write(sock , message , strlen(message));
-
-     
-    //Receive a message from client
-    // init the currenttime
-
+    /** receive a message from client with local port*/
     if ((read_size = recv(socke , client_message , 12 - 1 , 0)) > 0){
         client_message[read_size] = '\0';
         client_port = strtol(client_message, NULL, 10);
         printf("puerto del cliente: %d\n",client_port );
-
     }
     
+    /** init current time of connection */
     time_t currenttime = time(0);
 
-    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0) //&& time , 5m ) // <= 0
+    /** read messages from the client and reply */
+    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) > 0)  // >= 0
     {
 
-        if (read_size == 0){
+        /*if (read_size == 0){
             close(socke);
             socke = socket(AF_INET , SOCK_STREAM , 0);
             if (socke == -1)
             {
                 printf("Could not create socket");
             }
+
             puts("Socket created");
             time_t newtime = time(0);
             client.sin_addr.s_addr = inet_addr(client_ip);
             client.sin_family = AF_INET;
             client.sin_port = htons(client_port);
+
             while (connect(socke, (struct sockaddr *)&client , sizeof(client)) < 0)
             {
                 perror("Estoy aqui connect failed. Error");
@@ -196,18 +210,19 @@ void *connection_handler(void *socket_desc)
             }
 
             currenttime  = time(0);
-            //write(socke, client_port, strlen(client_port));
+            write(socke, client_port, strlen(client_port));
             puts("Connected\n");
             continue;
             
             
-        }
-        //Send the message back to client
+        }*/
+
+        /** send message back to client */
         client_message[read_size] = '\0';
         printf("%s\n", client_message );
         write(socke , client_message , strlen(client_message));
         
-        fp = fopen( file , "a" );
+        fp = fopen( file , "a" ); /** open or create the binnacle for write */
 
         printf("Current thread id %lu\n",pthread_self());
 
@@ -232,30 +247,34 @@ void *connection_handler(void *socket_desc)
         }
         fwrite(")" , 1 , sizeof(char) , fp );*/
 
+        /** save the message from client */
         char *m = strtok(client_message,"]");
         m =  client_message + strlen(m) + 2;
 
+        /** check patterns in message */
         if(patternFinder(m) > 0){
             /* manejar que hacer cuando se encuentra un patroncito */
+            /** handler for recognized pattern  */
             printf("Pattern recognized: %s\n", m);
         } else {
             /* No es un patron asi que no se hace nada. Solo se escribe en la bitacora */
+            /** no patters found. */
             printf("Not a pattern.\n");
         }
 
-
+        /** getting the id thread  */
         pch = strtok (client_message,"\n");
         if (pch != NULL)
         {
             sprintf(res,"%lu %s",pthread_self(),pch);
         }
 
-        
+        /** writing on binnacle file */
         fwrite(res , sizeof(char) , strlen(res) , fp );
         fwrite("\n" , 1 , sizeof(char) , fp );
 
-
-    fclose(fp);
+        /** close the binnacle file */
+        fclose(fp);
     }
      
     /*if(read_size == 0)
@@ -266,18 +285,24 @@ void *connection_handler(void *socket_desc)
 
         fflush(stdout);
     }
-    else*/ if(read_size == -1)
+    else*/ 
+
+    /** failed */
+    if(read_size == -1)
     {
         perror("recv failed");
     }
          
-    //Free the socket pointer
+    /** free the socket pointer */
     free(params->sock);
      
     return 0;
 }
 
-
+/** 
+*   Return 1 if a pattern was found and -1 if not
+*   @params m message from client
+*/
 int patternFinder(char *m){
     if (strcmp(m, "Communication Offline") == 0){
         return 1;
