@@ -139,6 +139,7 @@ void *connection_handler(void *socket_desc)
     char * pch;
     char * str;
     FILE *fp; 
+    int client_port;
     int num = strtol(params->port,NULL,10);
     printf("%i\n", socke);
     printf("%s\n", params->ip);
@@ -157,6 +158,12 @@ void *connection_handler(void *socket_desc)
     //Receive a message from client
     // init the currenttime
 
+    if ((read_size = recv(socke , client_message , 12 - 1 , 0)) > 0){
+        client_message[read_size] = '\0';
+        client_port = strtol(client_message, NULL, 10);
+        printf("puerto del cliente: %d\n",client_port );
+
+    }
     
     time_t currenttime = time(0);
 

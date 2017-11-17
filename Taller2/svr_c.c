@@ -21,6 +21,7 @@ int main(int argc , char *argv[])
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
     char number[12];
+    char localportstr[12];
 
     char *hostname;
 
@@ -28,8 +29,8 @@ int main(int argc , char *argv[])
     char *flag_localport = strdup("-l");
     char *flag_serverport = strdup("-p");
 
-    long localport;
-    long serverport;
+    int localport;
+    int serverport;
 
     int n = 1;
     int k = 2;
@@ -49,12 +50,13 @@ int main(int argc , char *argv[])
         n = n + 2;
         k = k + 2;
     }
-
+    printf("%s\n", hostname);
+    printf("%d\n", serverport);
 
     FILE *fp;
     i = 0;
 
-    fp = fopen("reg.txt" , "r+");
+    fp = fopen("reg.txt" , "r");
     if (fp != NULL){
         fscanf (fp, "%d", &i);
     }
@@ -67,9 +69,9 @@ int main(int argc , char *argv[])
     }
     puts("Socket created");
      
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_addr.s_addr = inet_addr(hostname);
     server.sin_family = AF_INET;
-    server.sin_port = htons( 8881 + i );
+    server.sin_port = htons( serverport );
 
     if (i > 0) {
 
@@ -100,14 +102,16 @@ int main(int argc , char *argv[])
             perror("connect failed. Error");
             return 1;
         }
-     
+        
+        sprintf(localportstr, "%d", localport);
+        write(sock, localportstr, strlen(localportstr));
         puts("Connected\n");
     }
     puts("Connected\n");
 
+    fclose(fp);
     sprintf(number, "%d", i+1);
-    if (fp == NULL)
-        fp = fopen("reg.txt" , "w");
+    fp = fopen("reg.txt" , "w");
     printf("String number %s\n",number);
     fwrite(number , sizeof(char) , strlen(number) , fp );
     puts("Connected\n");
