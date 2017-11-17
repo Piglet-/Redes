@@ -115,6 +115,7 @@ int main(int argc , char *argv[])
         //Now join the thread , so that we dont terminate before the thread
         //pthread_join( sniffer_thread , NULL);
         puts("Handler assigned");
+
     }
      
     if (client_sock < 0)
@@ -152,7 +153,6 @@ void *connection_handler(void *socket_desc)
      
     message = "Now type something and i shall repeat what you type \n";
     //write(sock , message , strlen(message));
-
      
     //Receive a message from client
     while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) > 0 )
@@ -163,7 +163,7 @@ void *connection_handler(void *socket_desc)
         
         fp = fopen( file , "a" );
 
-        printf("Current thread id %lu\n",pthread_self());
+        printf("Current thread id %lu",pthread_self());
 
         char res[500];
 
