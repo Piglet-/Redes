@@ -20,6 +20,7 @@ int main(int argc , char *argv[])
     int sock, bytes_recv;
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
+    char number[12];
 
     char *hostname;
 
@@ -50,7 +51,14 @@ int main(int argc , char *argv[])
     }
 
 
-     
+    FILE *fp;
+    i = 0;
+
+    fp = fopen("reg.txt" , "r+");
+    if (fp != NULL){
+        fscanf (fp, "%d", &i);
+    }
+
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
     if (sock == -1)
@@ -61,16 +69,49 @@ int main(int argc , char *argv[])
      
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_family = AF_INET;
-    server.sin_port = htons( 8888 );
- 
-    //Connect to remote server
-    if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
-    {
-        perror("connect failed. Error");
-        return 1;
-    }
+    server.sin_port = htons( 8881 + i );
+
+    if (i > 0) {
+
+        //Bind
+        int client_sock , c , *new_sock;
+        struct sockaddr_in client;
+
+        if( bind(sock,(struct sockaddr *)&server , sizeof(server)) < 0) 
+        {
+            //print the error message
+            perror("bind failed. Error");
+            return 1;
+        }
+        puts("bind done");
+         
+        //Listen
+        listen(sock , 3);
+         
+        //Accept and incoming connection
+        puts("Waiting for incoming connections...");
+        c = sizeof(struct sockaddr_in);
+        client_sock = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c);
+
+    } else {
+        //Connect to remote server
+        if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+        {
+            perror("connect failed. Error");
+            return 1;
+        }
      
+        puts("Connected\n");
+    }
     puts("Connected\n");
+
+    sprintf(number, "%d", i+1);
+    if (fp == NULL)
+        fp = fopen("reg.txt" , "w");
+    printf("String number %s\n",number);
+    fwrite(number , sizeof(char) , strlen(number) , fp );
+    puts("Connected\n");
+    fclose(fp);
 
     //keep communicating with server
     while(1)
