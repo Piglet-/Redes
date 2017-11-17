@@ -15,6 +15,7 @@ char *file;
 //the thread function
 void *connection_handler(void *);
 int patternFinder(char *m);
+char *client_ip;
 
 struct ParamsThread
 {
@@ -97,15 +98,15 @@ int main(int argc , char *argv[])
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
         puts("Connection accepted");
-         
         pthread_t sniffer_thread;
         new_sock = malloc(1);
         *new_sock = client_sock;
         struct ParamsThread params;
-        params.ip = "127.0.0.1";
+        params.ip = inet_ntoa(client.sin_addr);
         params.port = "8888";
         params.sock = new_sock;
          
+        client_ip = inet_ntoa(client.sin_addr);
         if( pthread_create( &sniffer_thread , NULL ,  connection_handler , &params) < 0)
         {
             perror("could not create thread");
@@ -140,6 +141,7 @@ void *connection_handler(void *socket_desc)
     char * str;
     FILE *fp; 
     int client_port;
+    struct sockaddr_in client;
     int num = strtol(params->port,NULL,10);
     printf("%i\n", socke);
     printf("%s\n", params->ip);
@@ -172,12 +174,25 @@ void *connection_handler(void *socket_desc)
 
         if (read_size == 0){
             time_t newtime = time(0);
-            sleep(5);
-            if(newtime - currenttime > 30){
-                printf("send alert\n");
-                currenttime = newtime;
+            client.sin_addr.s_addr = client_ip;
+            client.sin_family = AF_INET;
+            client.sin_port = htons(client_port);
+            if (connect(socke, (struct sockaddr *)&client , sizeof(client)) < 0)
+            {
+                perror("connect failed. Error");
+                sleep(5);
+                if(newtime - currenttime > 30)
+                {
+                    printf("send alert\n");
+                    currenttime = newtime;
+                }
+                continue;
+            } else {
+                currenttime  = time(0);
+                write(socke, client_port, strlen(client_port));
+                puts("Connected\n");
             }
-            continue;
+            
         } else {
             //current time
             currenttime = time(0);
