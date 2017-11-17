@@ -75,7 +75,7 @@ int main(int argc , char *argv[])
     server.sin_port = htons( 8881 );
      
     //Bind
-    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0) 
     {
         //print the error message
         perror("bind failed. Error");
@@ -155,8 +155,26 @@ void *connection_handler(void *socket_desc)
 
      
     //Receive a message from client
-    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) > 0 )
+    // init the currenttime
+
+    
+    time_t currenttime = time(0);
+
+    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0) //&& time , 5m ) // <= 0
     {
+
+        if (read_size == 0){
+            time_t newtime = time(0);
+            sleep(5);
+            if(newtime - currenttime > 30){
+                printf("send alert\n");
+                currenttime = newtime;
+            }
+            continue;
+        } else {
+            //current time
+            currenttime = time(0);
+        }
         //Send the message back to client
         client_message[read_size] = '\0';
         write(socke , client_message , strlen(client_message));
@@ -212,12 +230,15 @@ void *connection_handler(void *socket_desc)
     fclose(fp);
     }
      
-    if(read_size == 0)
+    /*if(read_size == 0)
     {
         puts("Client disconnected");
+        // save now (time)
+        // after 5 secs try reconnet, if i do it i do the while, else 
+
         fflush(stdout);
     }
-    else if(read_size == -1)
+    else*/ if(read_size == -1)
     {
         perror("recv failed");
     }
