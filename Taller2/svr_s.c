@@ -173,25 +173,33 @@ void *connection_handler(void *socket_desc)
     {
 
         if (read_size == 0){
+            close(socke);
+            socke = socket(AF_INET , SOCK_STREAM , 0);
+            if (socke == -1)
+            {
+                printf("Could not create socket");
+            }
+            puts("Socket created");
             time_t newtime = time(0);
-            client.sin_addr.s_addr = client_ip;
+            client.sin_addr.s_addr = inet_addr(client_ip);
             client.sin_family = AF_INET;
             client.sin_port = htons(client_port);
-            if (connect(socke, (struct sockaddr *)&client , sizeof(client)) < 0)
+            while (connect(socke, (struct sockaddr *)&client , sizeof(client)) < 0)
             {
-                perror("connect failed. Error");
+                perror("Estoy aqui connect failed. Error");
                 sleep(5);
                 if(newtime - currenttime > 30)
                 {
                     printf("send alert\n");
                     currenttime = newtime;
                 }
-                continue;
-            } else {
-                currenttime  = time(0);
-                write(socke, client_port, strlen(client_port));
-                puts("Connected\n");
             }
+
+            currenttime  = time(0);
+            //write(socke, client_port, strlen(client_port));
+            puts("Connected\n");
+            continue;
+            
             
         } else {
             //current time
