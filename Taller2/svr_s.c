@@ -19,7 +19,7 @@ char *file; /** binnacle of the server */
 
 void *connection_handler(void *);   /** The thread function. */
 int patternFinder(char *m);         /** Function to find patterns */
-char *client_ip;                    /** IP of the connected client */
+int send_mail(char *m);
 
 /**  
     * Struct for params of each thread. 
@@ -28,7 +28,6 @@ char *client_ip;                    /** IP of the connected client */
 struct ParamsThread
 {
     char *ip;       /** Struct value for the IP address */
-    char *port;     /** Struct value for the port */
     int *sock;      /** Struct value for the thread ID */
 };
 
@@ -116,11 +115,8 @@ int main(int argc , char *argv[])
         *new_sock = client_sock;                    /** listen */
         struct ParamsThread params;                 /** struct of thread params */
         params.ip = inet_ntoa(client.sin_addr);     /** IP address */
-        params.port = "8888";                       /** port */
         params.sock = new_sock;                     /** socket ID */
          
-        /** saving IP address */
-        client_ip = inet_ntoa(client.sin_addr); 
 
         /** creating thread */
         if( pthread_create( &sniffer_thread , NULL ,  connection_handler , &params) < 0)
@@ -160,18 +156,11 @@ void *connection_handler(void *socket_desc)
     char * pch;
     FILE *fp; 
     int client_port;
-    int num = strtol(params->port,NULL,10);
-
-    /** print socket information */
-    printf("%i\n", socke);
-    printf("%s\n", params->ip);
-    printf("%i\n", num);
 
     /** receive a message from client with local port*/
     if ((read_size = recv(socke , client_message , 12 - 1 , 0)) > 0){
         client_message[read_size] = '\0';
         client_port = strtol(client_message, NULL, 10);
-        printf("puerto del cliente: %d\n",client_port );
     }
     
     time_t currenttime = clock();
@@ -191,7 +180,7 @@ void *connection_handler(void *socket_desc)
 
             puts("Socket created");
             time_t newtime = time(0);
-            client.sin_addr.s_addr = inet_addr(client_ip);
+            client.sin_addr.s_addr = inet_addr(params->ip);
             client.sin_family = AF_INET;
             client.sin_port = htons(client_port);
 
@@ -231,12 +220,8 @@ void *connection_handler(void *socket_desc)
 
         /** send message back to client */
         client_message[read_size] = '\0';
-        printf("%s\n", client_message );
-        write(socke , client_message , strlen(client_message));
-        
+        printf("%s\n", client_message );        
         fp = fopen( file , "a" ); /** open or create the binnacle for write */
-
-        printf("Current thread id %lu\n",pthread_self());
 
         char res[500];
 
@@ -279,12 +264,11 @@ void *connection_handler(void *socket_desc)
         pch = strtok (client_message,"\n");
         if (pch != NULL)
         {
-            sprintf(res,"(%lu,%s,%s,%d,%s)",pthread_self(),m1,params->ip,pattern,m2);
+            sprintf(res,"(%lu,%s,%s,%d,%s)\n",pthread_self(),m1,params->ip,pattern,m2);
         }
 
         /** writing on binnacle file */
         fwrite(res , sizeof(char) , strlen(res) , fp );
-        fwrite("\n" , 1 , sizeof(char) , fp );
 
         /** close the binnacle file */
         fclose(fp);

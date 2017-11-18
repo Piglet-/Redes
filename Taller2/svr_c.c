@@ -61,8 +61,6 @@ int main(int argc , char *argv[])
         n = n + 2;
         k = k + 2;
     }
-    printf("%s\n", hostname);
-    printf("%d\n", serverport);
 
     FILE *fp;   /** file of connections ? */
     i = 0;      
@@ -129,7 +127,6 @@ int main(int argc , char *argv[])
 
     sprintf(number, "%d", i+1);
     fp = fopen("reg.txt" , "w");
-    printf("String number %s\n",number);
 
     fwrite(number , sizeof(char) , strlen(number) , fp );
 
@@ -167,17 +164,6 @@ int main(int argc , char *argv[])
             return 1;
         }
         
-        /** receive a reply from server */  
-        bytes_recv = recv(sock , server_reply , 2000 - 1 , 0);
-        server_reply[bytes_recv] = '\0';
-        if( bytes_recv < 0)
-        {
-            puts("recv failed");
-            break;
-        }
-        puts("Server reply :");
-        puts(server_reply);
-
     }
     
     /** close socket */  
