@@ -156,6 +156,7 @@ void *connection_handler(void *socket_desc)
     char * pch;
     FILE *fp; 
     int client_port;
+    struct sockaddr_in client;
 
     /** receive a message from client with local port*/
     if ((read_size = recv(socke , client_message , 12 - 1 , 0)) > 0){
@@ -169,8 +170,9 @@ void *connection_handler(void *socket_desc)
     while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0)  // >= 0
     {
         /** THIS COMMENTED CODE WAS AN INTENT OF STABLISH A CONNECTION WITH THE CLIENT */
+
         
-        /*if (read_size == 0){
+        if (read_size == 0){
             close(socke);
             socke = socket(AF_INET , SOCK_STREAM , 0);
             if (socke == -1)
@@ -188,22 +190,21 @@ void *connection_handler(void *socket_desc)
             {
                 perror("Estoy aqui connect failed. Error");
                 sleep(5);
-                if(newtime - currenttime > 30)
+                /*if(newtime - currenttime > 30)
                 {
                     printf("send alert\n");
                     currenttime = newtime;
-                }
+                }*/
             }
-
+            
             currenttime  = time(0);
-            write(socke, client_port, strlen(client_port));
-            puts("Connected\n");
+            //write(socke, client_port, strlen(client_port));
             continue;
             
             
-        }*/
+        }
 
-        if(read_size == 0){
+        /*if(read_size == 0){
 
             newtime = clock();
             time_t difference = newtime - currenttime;
@@ -216,7 +217,7 @@ void *connection_handler(void *socket_desc)
             continue;
         } 
 
-        currenttime = clock();
+        currenttime = clock();*/
 
         /** send message back to client */
         client_message[read_size] = '\0';

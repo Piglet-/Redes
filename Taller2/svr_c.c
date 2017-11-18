@@ -27,7 +27,7 @@ int main(int argc , char *argv[])
         exit(1);
     }
 
-    int sock, bytes_recv;                       /** integers for sockt ID and number of received bytes */
+    int sock, client_sock, bytes_recv;                       /** integers for sockt ID and number of received bytes */
     struct sockaddr_in server;                  /** struct for server info */
     char message[1000] , server_reply[2000];    /** variables for messages */
     char number[12];                            
@@ -44,6 +44,7 @@ int main(int argc , char *argv[])
 
     int n = 1;
     int k = 2;
+    int server_mode = 0;
     int i;
 
     /** readinng the params from comand line */
@@ -82,14 +83,15 @@ int main(int argc , char *argv[])
     /** prepare the sockaddr_in structure */ 
     server.sin_addr.s_addr = inet_addr(hostname);
     server.sin_family = AF_INET;
-    server.sin_port = htons( serverport );
 
     /** THIS COMMENTED CODE WAS AN INTENT OF ACCEPTING CONNECTIONS FRON THE SERVER */
-    /*if (i > 0) {
+    if (i > 0) {
+
+        server_mode = 42;
 
         //Bind
         server.sin_port = htons( localport );
-        int client_sock , c , *new_sock;
+        int c , *new_sock;
         struct sockaddr_in client;
 
         if( bind(sock,(struct sockaddr *)&server , sizeof(server)) < 0) 
@@ -107,8 +109,11 @@ int main(int argc , char *argv[])
         puts("Waiting for incoming connections...");
         c = sizeof(struct sockaddr_in);
         client_sock = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c);
+        puts("Connected again");
 
-    } else {*/
+    } else {
+        server.sin_port = htons( serverport );
+
 
         /** Connect to remote server */    
         if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
@@ -119,18 +124,16 @@ int main(int argc , char *argv[])
         /** send to te server the client local port */    
         sprintf(localportstr, "%d", localport);
         write(sock, localportstr, strlen(localportstr));
-        //puts("Connected\n");
-    //}
-    puts("Connected\n");
+        puts("Connected");
+    }
     /** close connec tions file*/    
-    fclose(fp);
+    //fclose(fp);
 
     sprintf(number, "%d", i+1);
     fp = fopen("reg.txt" , "w");
 
     fwrite(number , sizeof(char) , strlen(number) , fp );
 
-    puts("Connected\n");    
     fclose(fp);
 
     
@@ -158,12 +161,19 @@ int main(int argc , char *argv[])
         printf("Sending message %s\n", output);
         
         /** send some data */  
-        if( send(sock , output , strlen(output) , 0) < 0)
-        {
-            puts("Send failed");
-            return 1;
+
+        if(server_mode){
+            if( write(client_sock , output , strlen(output)) < 0)
+            {
+                perror("Send failed");
+            }
+        } else {
+            if( write(sock , output , strlen(output)) < 0)
+            {
+                perror("Send failed");
+                return 1;
+            }
         }
-        
     }
     
     /** close socket */  
