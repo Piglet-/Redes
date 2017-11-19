@@ -77,7 +77,7 @@ int main(int argc , char *argv[])
     int socket_desc , client_sock , c , *new_sock;  /** sockets variables */
     struct sockaddr_in server , client;             /** struct for client and server info */
 
-     
+
     
     socket_desc = socket(AF_INET , SOCK_STREAM , 0); /** create socket */
     if (socket_desc == -1)
@@ -89,7 +89,7 @@ int main(int argc , char *argv[])
     /** prepare the sockaddr_in structure */ 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8881 );
+    server.sin_port = htons( port );
      
     
     /** binding */ 
