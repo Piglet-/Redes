@@ -1,17 +1,17 @@
 CC = gcc
-OPT = -g -Wall -lpthread
+OPT = -lpthread
 
 all: clean svr_c svr_s 
 
 svr_c: svr_c.c 
-	$(CC) $(OPT) -o $@ svr_c.c 
-	rm -rf *.o *.dSYM 
+	$(CC) svr_c.c -o $@ 
+#	rm -rf *.o *.dSYM 
  
 svr_s: svr_s.c
-	$(CC) $(OPT) -o $@ svr_s.c 
-	rm -rf *.o *.dSYM 
+	$(CC) svr_s.c -o $@ $(OPT) 
+#	rm -rf *.o *.dSYM 
 
 #.PHONY: clean
 
 clean: 
-	rm -rf *.o *.dSYM *~
+	rm -rf *.o *.dSYM *~ svr_c svr_s reg.txt
