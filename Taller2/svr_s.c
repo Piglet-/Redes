@@ -175,8 +175,15 @@ void *connection_handler(void *socket_desc)
     {
         /** THIS COMMENTED CODE WAS AN INTENT OF STABLISH A CONNECTION WITH THE CLIENT */
 
+        char res[500];
+
         
         if (read_size == 0){
+            /*
+                CLIENT DISCONNECTED
+                There will be reconnection attemps every few seconds
+            */
+
             close(socke);
             socke = socket(AF_INET , SOCK_STREAM , 0);
             if (socke == -1)
@@ -199,9 +206,27 @@ void *connection_handler(void *socket_desc)
                 if(currenttime - newtime > 30)
                 {
                     printf("Sending Communication Offline alert.\n");
+                    /* sends mail notifying the communication offline */
                     send_mail(strdup("Communication Offline"));
+
                     newtime = time(0);
+                
+                    time_t rawtime;
+                    struct tm * timeinfo;
+                    time ( &rawtime );
+
+                    timeinfo = localtime ( &rawtime );
+
+                    char date[30];
+
+                    sprintf(date,"%d:%d:%d,%d-%d-%d",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900);
+
+                    sprintf(res,"(%lu,%s,%s,%d,%s)\n",pthread_self(),date,params->ip,1,strdup("Communication Offline"));
+                    fp = fopen( file , "a" ); /** open or create the binnacle for write */
+                    fwrite(res , sizeof(char) , strlen(res) , fp );
+                    fclose(fp);
                 }
+                
             }
             
             //write(socke, client_port, strlen(client_port));
@@ -218,26 +243,7 @@ void *connection_handler(void *socket_desc)
         printf("Message from %lu: %s\n", pthread_self(), client_message );        
         fp = fopen( file , "a" ); /** open or create the binnacle for write */
 
-        char res[500];
 
-        /*pch = strtok (client_message," :");
-        while (pch != NULL)
-        {
-            fwrite("(" , 1 , sizeof(char) , fp );
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(", " , 1 , sizeof(char) * 2 , fp );
-            pch = strtok (NULL, " :");
-            
-        }
-
-        while (pch != NULL)
-        {
-            fwrite(pch , 1 , strlen(pch) , fp );
-            pch = strtok (NULL, " :");
-            if (pch != NULL) fwrite(" " , 1 , sizeof(char) , fp );
-
-        }
-        fwrite(")" , 1 , sizeof(char) , fp );*/
 
         /** save the message from client */
         char *m1 = strtok(client_message," ");
@@ -270,16 +276,6 @@ void *connection_handler(void *socket_desc)
     }
 
     
-     
-    /*if(read_size == 0)
-    {
-        puts("Client disconnected");
-        // save now (time)
-        // after 5 secs try reconnet, if i do it i do the while, else 
-
-        fflush(stdout);
-    }
-    else*/ 
 
     /** failed */
     if(read_size == -1)
