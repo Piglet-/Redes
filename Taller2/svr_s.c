@@ -16,6 +16,7 @@
 #include <string.h>
 
 char *file; /** binnacle of the server */
+FILE *fp; 
 
 void *connection_handler(void *);   /** The thread function. */
 int patternFinder(char *m);         /** Function to find patterns */
@@ -154,7 +155,7 @@ void *connection_handler(void *socket_desc)
     int read_size;
     char *message , client_message[2000];
     char * pch;
-    FILE *fp; 
+    
     int client_port;
     struct sockaddr_in client;
 
