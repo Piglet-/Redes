@@ -1,8 +1,8 @@
 /**  
 * svr_c.c - C client forcommunicate with server 
 * @authors  
-*   Carlos Ferreira     11-10
-*   Carlos Martínez     11-10
+*   Carlos Ferreira     11-10323
+*   Carlos Martínez     11-10584
 *   Dayana Rodrigues    10-10615
 */
 
@@ -27,13 +27,13 @@ int main(int argc , char *argv[])
         exit(1);
     }
 
-    int sock, client_sock, bytes_recv;                       /** integers for sockt ID and number of received bytes */
+    int sock, client_sock, bytes_recv;          /** integers for sockt ID and number of received bytes */
     struct sockaddr_in server;                  /** struct for server info */
     char message[1000] , server_reply[2000];    /** variables for messages */
     char number[12];                            
     char localportstr[12];                      /** local port of client */
 
-    char *hostname; /** hostname of client */
+    char *hostname;  /** hostname of client */
 
     char *flag_hostname = strdup("-d");     /** flag for hostname */
     char *flag_localport = strdup("-l");    /** flag for local port */
@@ -63,15 +63,15 @@ int main(int argc , char *argv[])
         k = k + 2;
     }
 
-    FILE *fp;   /** file of connections ? */
+    FILE *fp;   /** file of client connections */
     i = 0;      
 
+    /** open the file with the num of previous connections with server */
     fp = fopen("reg.txt" , "r");
     if (fp != NULL){
         fscanf (fp, "%d", &i);
     }
 
-    //Create socket
     /** create socket */
     sock = socket(AF_INET , SOCK_STREAM , 0);
     if (sock == -1)
@@ -84,28 +84,28 @@ int main(int argc , char *argv[])
     server.sin_addr.s_addr = inet_addr(hostname);
     server.sin_family = AF_INET;
 
-    /** THIS COMMENTED CODE WAS AN INTENT OF ACCEPTING CONNECTIONS FRON THE SERVER */
+    /** if the client was connected with server before, the client act like server */
     if (i > 0) {
 
-        server_mode = 42;
+        server_mode = 42;   /** node for server */
 
-        //Bind
+        /** variables for connection with server */
         server.sin_port = htons( localport );
         int c , *new_sock;
         struct sockaddr_in client;
 
+        /** binding */
         if( bind(sock,(struct sockaddr *)&server , sizeof(server)) < 0) 
         {
-            //print the error message
             perror("bind failed. Error");
             return 1;
         }
         puts("bind done");
          
-        //Listen
+        /** binding */
         listen(sock , 3);
          
-        //Accept and incoming connection
+        /** accept incoming connection fron server */
         puts("Waiting for incoming connections...");
         c = sizeof(struct sockaddr_in);
         client_sock = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c);

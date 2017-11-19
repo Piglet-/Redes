@@ -1,8 +1,8 @@
 /**  
 * svr_s.c - C socket server what handles multiple clients using threads  
 * @authors  
-*   Carlos Ferreira     11-10
-*   Carlos Martínez     11-10
+*   Carlos Ferreira     11-10323
+*   Carlos Martínez     11-10584
 *   Dayana Rodrigues    10-10615
 */
 
@@ -15,8 +15,8 @@
 #include<pthread.h>     /** for threading, link with lpthread */
 #include <string.h>
 
-char *file; /** binnacle of the server */
-FILE *fp; 
+char *file; /** log file name of the server */
+FILE *fp;   /** log file */
 
 void *connection_handler(void *);   /** The thread function. */
 int patternFinder(char *m);         /** Function to find patterns */
@@ -46,8 +46,8 @@ int main(int argc , char *argv[])
     }
 
     char *flag_port;                /** flag port */
-    char *flag_log_file;            /** flag for binnacle file */
-    file = argv[4];                 /** name of binnacle file */
+    char *flag_log_file;            /** flag for log file */
+    file = argv[4];                 /** name of log file */
     flag_port = strdup("-l");       
     flag_log_file = strdup("-b");   
 
@@ -171,73 +171,53 @@ void *connection_handler(void *socket_desc)
     time_t currenttime = clock();
     time_t newtime;
     /** read messages from the client and reply */
-    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0)  // >= 0
+    while( (read_size = recv(socke , client_message , 2000 - 1 , 0)) >= 0)
     {
-        /** THIS COMMENTED CODE WAS AN INTENT OF STABLISH A CONNECTION WITH THE CLIENT */
-
-        
+        /** handle for lost connection */
         if (read_size == 0){
-            close(socke);
-            socke = socket(AF_INET , SOCK_STREAM , 0);
+            /** close the socket */
+            close(socke);                               
+            /** create new socket */
+            socke = socket(AF_INET , SOCK_STREAM , 0);  
             if (socke == -1)
             {
                 printf("Could not create socket");
             }
+
             printf("Connection to %lu lost.\n", pthread_self());
             printf("Trying to reconnect...\n");
+
+            /** init descriptor for communicate with client */
             time_t newtime = time(0);
             client.sin_addr.s_addr = inet_addr(params->ip);
             client.sin_family = AF_INET;
             client.sin_port = htons(client_port);
 
-
+            /** try to reconnect with client */
             while (connect(socke, (struct sockaddr *)&client , sizeof(client)) < 0)
             {
                 perror("Connect failed. Error");
                 sleep(5);
+                /** send alert if can't communicate for 5 min (300 sec)*/
                 currenttime  = time(0);
-                if(currenttime - newtime > 30)
+                if(currenttime - newtime > 300)
                 {
                     printf("Sending Communication Offline alert.\n");
                     send_mail(strdup("Communication Offline"));
                     newtime = time(0);
                 }
             }
-            
-            //write(socke, client_port, strlen(client_port));
+            /** continue with the communication */
             printf("Reconnected to %lu\n", pthread_self());
-            continue;
-            
-            
+            continue;    
         }
-
-        
 
         /** send message back to client */
         client_message[read_size] = '\0';
         printf("Message from %lu: %s\n", pthread_self(), client_message );        
-        fp = fopen( file , "a" ); /** open or create the binnacle for write */
+        fp = fopen( file , "a" ); /** open or create the log for write */
 
         char res[500];
-
-        /*pch = strtok (client_message," :");
-        while (pch != NULL)
-        {
-            fwrite("(" , 1 , sizeof(char) , fp );
-            fwrite(pch , 1 , strlen(pch) , fp );
-            fwrite(", " , 1 , sizeof(char) * 2 , fp );
-            pch = strtok (NULL, " :");
-            
-        }
-
-        while (pch != NULL)
-        {
-            fwrite(pch , 1 , strlen(pch) , fp );
-            pch = strtok (NULL, " :");
-            if (pch != NULL) fwrite(" " , 1 , sizeof(char) , fp );
-
-        }
-        fwrite(")" , 1 , sizeof(char) , fp );*/
 
         /** save the message from client */
         char *m1 = strtok(client_message," ");
@@ -260,26 +240,13 @@ void *connection_handler(void *socket_desc)
             sprintf(res,"(%lu,%s,%s,%d,%s)\n",pthread_self(),m1,params->ip,pattern,m2);
         }
 
-        /** writing on binnacle file */
+        /** writing on log file */
         fwrite(res , sizeof(char) , strlen(res) , fp );
 
-        /** close the binnacle file */
+        /** close the log file */
         fclose(fp);
 
-        
     }
-
-    
-     
-    /*if(read_size == 0)
-    {
-        puts("Client disconnected");
-        // save now (time)
-        // after 5 secs try reconnet, if i do it i do the while, else 
-
-        fflush(stdout);
-    }
-    else*/ 
 
     /** failed */
     if(read_size == -1)
@@ -294,9 +261,10 @@ void *connection_handler(void *socket_desc)
 }
 
 /** 
-*   Return 1 if a pattern was found and -1 if not
+*   Return the code if a pattern was found and -1 if not
 *   @params m message from client
 */
+
 int patternFinder(char *m){
     int code = -1;
     if (strcmp(m, "Communication Offline") == 0){
