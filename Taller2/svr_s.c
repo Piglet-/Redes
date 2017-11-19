@@ -228,12 +228,14 @@ void *connection_handler(void *socket_desc)
 
                     char date[30];
 
+                    /** prepare data and update the log file */
                     sprintf(date,"%d:%d:%d,%d-%d-%d",timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,timeinfo->tm_mday, timeinfo->tm_mon + 1, timeinfo->tm_year + 1900);
 
                     sprintf(res,"(%lu,%s,%s,%d,%s)\n",pthread_self(),date,params->ip,1,strdup("Communication Offline"));
-                    fp = fopen( file , "a" ); /** open or create the binnacle for write */
-                    fwrite(res , sizeof(char) , strlen(res) , fp );
-                    fclose(fp);
+                    
+                    fp = fopen( file , "a" );                       /** open or create the log for write */
+                    fwrite(res , sizeof(char) , strlen(res) , fp ); /** write */
+                    fclose(fp);                                     /** close the log file */
                 }
                 
             }
@@ -246,8 +248,6 @@ void *connection_handler(void *socket_desc)
         client_message[read_size] = '\0';
         printf("Message from %lu: %s\n", pthread_self(), client_message );        
         fp = fopen( file , "a" ); /** open or create the log for write */
-
-
 
         /** save the message from client */
         char *m1 = strtok(client_message," ");
