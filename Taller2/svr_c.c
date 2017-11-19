@@ -111,9 +111,10 @@ int main(int argc , char *argv[])
         client_sock = accept(sock, (struct sockaddr *)&client, (socklen_t*)&c);
         puts("Connected again");
 
+    /** if the client is connected to server for first time */
     } else {
+        /** set server port */
         server.sin_port = htons( serverport );
-
 
         /** Connect to remote server */    
         if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
@@ -126,17 +127,17 @@ int main(int argc , char *argv[])
         write(sock, localportstr, strlen(localportstr));
         puts("Connected");
     }
-    /** close connec tions file*/    
-    //fclose(fp);
 
+    /** open the client connections file */
     sprintf(number, "%d", i+1);
     fp = fopen("reg.txt" , "w");
 
+    /** update the nun of connections in file */
     fwrite(number , sizeof(char) , strlen(number) , fp );
 
+    /** close connection file */
     fclose(fp);
 
-    
     /** keep communicating with server */    
     while(1)
     {
@@ -160,8 +161,7 @@ int main(int argc , char *argv[])
         
         printf("Sending message %s\n", output);
         
-        /** send some data */  
-
+        /** send some data to server */  
         if(server_mode){
             if( write(client_sock , output , strlen(output)) < 0)
             {
@@ -178,5 +178,6 @@ int main(int argc , char *argv[])
     
     /** close socket */  
     close(sock);
+    
     return 0;
 }
