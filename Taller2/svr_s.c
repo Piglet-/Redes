@@ -76,6 +76,7 @@ int main(int argc , char *argv[])
 
     int socket_desc , client_sock , c , *new_sock;  /** sockets variables */
     struct sockaddr_in server , client;             /** struct for client and server info */
+
      
     
     socket_desc = socket(AF_INET , SOCK_STREAM , 0); /** create socket */
@@ -159,6 +160,8 @@ void *connection_handler(void *socket_desc)
     int client_port;
     struct sockaddr_in client;
 
+    printf("New ATM with id %lu connected!\n", pthread_self());
+
     /** receive a message from client with local port*/
     if ((read_size = recv(socke , client_message , 12 - 1 , 0)) > 0){
         client_message[read_size] = '\0';
@@ -180,49 +183,39 @@ void *connection_handler(void *socket_desc)
             {
                 printf("Could not create socket");
             }
-
-            puts("Socket created");
+            printf("Connection to %lu lost.\n", pthread_self());
+            printf("Trying to reconnect...\n");
             time_t newtime = time(0);
             client.sin_addr.s_addr = inet_addr(params->ip);
             client.sin_family = AF_INET;
             client.sin_port = htons(client_port);
 
+
             while (connect(socke, (struct sockaddr *)&client , sizeof(client)) < 0)
             {
-                perror("Estoy aqui connect failed. Error");
+                perror("Connect failed. Error");
                 sleep(5);
-                /*if(newtime - currenttime > 30)
+                currenttime  = time(0);
+                if(currenttime - newtime > 30)
                 {
-                    printf("send alert\n");
-                    currenttime = newtime;
-                }*/
+                    printf("Sending Communication Offline alert.\n");
+                    send_mail(strdup("Communication Offline"));
+                    newtime = time(0);
+                }
             }
             
-            currenttime  = time(0);
             //write(socke, client_port, strlen(client_port));
+            printf("Reconnected to %lu\n", pthread_self());
             continue;
             
             
         }
 
-        /*if(read_size == 0){
-
-            newtime = clock();
-            time_t difference = newtime - currenttime;
-            int msec = 0;
-            msec = difference * 1000 / CLOCKS_PER_SEC;
-            if (msec > 30000){
-                printf("send alert\n");
-                break;
-            }
-            continue;
-        } 
-
-        currenttime = clock();*/
+        
 
         /** send message back to client */
         client_message[read_size] = '\0';
-        printf("%s\n", client_message );        
+        printf("Message from %lu: %s\n", pthread_self(), client_message );        
         fp = fopen( file , "a" ); /** open or create the binnacle for write */
 
         char res[500];
@@ -253,11 +246,9 @@ void *connection_handler(void *socket_desc)
 
         /** check patterns in message */
         if((pattern = patternFinder(m2)) > 0){
-            /* manejar que hacer cuando se encuentra un patroncito */
             /** handler for recognized pattern  */
             printf("Pattern recognized: %s\n", m2);
         } else {
-            /* No es un patron asi que no se hace nada. Solo se escribe en la bitacora */
             /** no patters found. */
             printf("Not a pattern.\n");
         }
@@ -357,7 +348,6 @@ int send_mail(char *m){
     fprintf(fp,"%s\n", m);              /** write body to it */
     fclose(fp);                         /** close it */
 
-    printf("send mail");
     /** prepare command line */
     sprintf(cmd,"mail -s ALERT  %s < %s",to,tempFile);
     /** execute it */
